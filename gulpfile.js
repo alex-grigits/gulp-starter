@@ -1,16 +1,17 @@
-const gulp = require('gulp')
-, pug = require('gulp-pug')
-, fs = require('fs')
-, browserSync = require('browser-sync').create()
-, reload = browserSync.reload
-, sass = require('gulp-sass')
-, plumber = require('gulp-plumber')
-, spritesmith = require('gulp.spritesmith')
-, sassGlob = require('gulp-sass-glob')
-, sourcemaps = require('gulp-sourcemaps')
-, csso = require('gulp-csso')
-, autoprefixer = require('gulp-autoprefixer')
-, cssunit = require('gulp-css-unit');
+const gulp = require('gulp'),
+	pug = require('gulp-pug'),
+	fs = require('fs'),
+	browserSync = require('browser-sync').create(),
+	reload = browserSync.reload,
+	sass = require('gulp-sass'),
+	plumber = require('gulp-plumber'),
+	spritesmith = require('gulp.spritesmith'),
+	sassGlob = require('gulp-sass-glob'),
+	sourcemaps = require('gulp-sourcemaps'),
+	csso = require('gulp-csso'),
+	autoprefixer = require('gulp-autoprefixer'),
+	cssunit = require('gulp-css-unit'),
+	del = require('del');
 
 // server
 gulp.task('server', function() {
@@ -24,7 +25,7 @@ gulp.task('server', function() {
 });
 
 gulp.task('sass', () => {
-	return gulp.src('./src/sass/main.scss')
+	return gulp.src('./src/sass/main.+(scss|sass)')
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
 		.pipe(sassGlob())
@@ -34,8 +35,8 @@ gulp.task('sass', () => {
 			cascade : false
 		}))
 		.pipe(cssunit({
-			type     :    'px-to-rem',
-			rootSize  :    16
+			type: 'px-to-rem',
+			rootSize: 16
 		}))
 		.pipe(csso())
 		.pipe(sourcemaps.write())
@@ -46,11 +47,11 @@ gulp.task('sass', () => {
 gulp.task('pug', () => {
 	// let locals = require('./content.json');
 
-	gulp.src('src/views/pages/**/*.pug')
+	gulp.src('src/views/index.pug')
 		.pipe(plumber())
 		.pipe(pug({
 			// locals : locals
-			pretty: true,
+			pretty: '	'
 		}))
 		.pipe(gulp.dest('dist'))
 		.pipe(reload({stream : true}));
@@ -61,7 +62,7 @@ gulp.task('sprite', function () {
 		'./src/img/icons/*.png'
 	).pipe(spritesmith({
 		imgName: 'sprite.png',
-		cssName: 'sprite.scss',
+		cssName: 'sprite.sass',
 		cssFormat: 'css',
 		imgPath: '../img/sprite.png',
 		padding: 70
@@ -71,9 +72,14 @@ gulp.task('sprite', function () {
 	spriteData.css.pipe(gulp.dest('./src/styles/sprite'));
 });
 
+// task for clean dist folder before start watch
+gulp.task('removedist', function() { return del.sync('dist'); });
+
 gulp.task('watch', () => {
 	gulp.watch('src/**/*.pug', ['pug']);
-	gulp.watch('src/**/*.scss', ['sass']);
+	gulp.watch('src/**/*.+(scss|sass)', ['sass']);
 });
 
-gulp.task('default', ['sass', 'pug', 'sprite', 'server', 'watch']);
+gulp.task('default',
+	['removedist', 'sass', 'pug', 'sprite', 'server', 'watch']
+);
